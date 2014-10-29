@@ -1,0 +1,29 @@
+@Test
+    public void testFindReservationOldReservation(){
+        Reservation reservation = mockAllReservations(true,false,false).get(0);
+        RateDetail rate = new RateDetail();
+        List<RatePolicyDetail> ratePolicyDetails = new ArrayList<>();
+        RatePolicyDetail ratePolicyDetail = new RatePolicyDetail();
+        ratePolicyDetail.setAmountDueAtBooking(true);
+        ratePolicyDetail.setRequiredDate(new Date(2013, 10, 24));
+        ratePolicyDetail.setRequiredTime("3:36:48");
+        ratePolicyDetails.add(ratePolicyDetail);
+        rate.setActionCode("ActionCode");
+        rate.setPolicies(ratePolicyDetails);
+        reservation.setRateDetail(rate);
+        ConfirmedReservationInfo info = new ConfirmedReservationInfo();
+        info.setConfirmationNumber("123654");
+        info.setLastName("LastName");
+        this.request.setAttribute(DomainConstants.ENV_NAME, this.mappingElem);
+        this.request.setParameter("lastNameMyReservations", "LastName");
+        this.request.setParameter("confirmationNumber","123654");
+
+        when(this.pinYinUtil.toFisrtPinYinNoTone("lastNameMyReservations")).thenReturn("PinYin");
+        when(this.reservationManager.findReservation(eq("123654"), eq("LastName"), any(Locale.class))).thenReturn(reservation);
+        when(this.reservationManager.getAllReservatons(any(String.class), any(Locale.class))).thenReturn(
+                this.mockAllReservations(false, true, false));
+
+        String viewName = this.retrieveReservationController.findReservation(info, this.bindingResult, this.request,
+                this.response, this.modelMap);
+
+    }

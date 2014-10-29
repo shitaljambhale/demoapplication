@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project name="deploy-war" default="copy-modified-files">
+	<property name="project.home"
+		value="D:/IHG_ChinaWeb/SourceCode/ChinaWeb_Trunk/ChinaWebLocalization/ChinaWeb" />
+	<property name="tomcat.home" value="D:/apache-tomcat-7.0.42" />
+
+	<path id="tomcat.class.path">
+		<fileset dir="${tomcat.home}/lib">
+			<include name="**/*.jar" />
+			<include name="**/*.zip" />
+		</fileset>
+		<pathelement location="${tomcat.home}/bin/bootstrap.jar" />
+		<pathelement location="${tomcat.home}/bin/tomcat-juli.jar" />
+	</path>
+
+	<!-- Check Tomcat status -->
+	<target name="tomcat-check-status">
+	    <condition property="tomcat.started">
+	        <socket server="localhost" port="8080"/>
+	    </condition>
+	</target>
+
+	<!-- Stop Tomcat-->
+	<target name="stop-tomcat" depends="tomcat-check-status" if="tomcat.started">
+		<echo message="Stopping Tomcat..." />
+	    <java classname="org.apache.catalina.startup.Bootstrap" fork="true"
+	        classpathref="tomcat.class.path">
+	        <jvmarg value="-Dcatalina.home=${tomcat.home}"/>
+	        <arg line="stop"/>
+	    </java>
+	    <sleep seconds="5"/>
+	</target>
+
+	<!-- Clean -->
+	<target name="clean">
+		<echo message="Performing clean up for Tomcat" />
+		<delete file="${tomcat.home}/webapps/ROOT.war" />
+		<delete dir="${tomcat.home}/webapps/ROOT" />
+		<delete dir="${tomcat.home}/work/Catalina/localhost/ROOT" />
+	</target>
+	
+	<!-- Clean cache-->
+	<target name="clean-cached-files">
+		<echo message="Performing clean up for Tomcat for Cached files" />
+		<delete dir="${tomcat.home}/work/Catalina/localhost/ROOT" />
+	</target>
+	
+	<!-- Deploy -->
+	<target name="deploy-war" depends="clean">
+		<echo message="Deploy war in Tomcat" />
+		<copy file="${project.home}/target/ROOT-SNAPSHOT.war" tofile="${tomcat.home}/webapps/ROOT.war" />
+	</target>
+
+	<!-- Start Tomcat -->
+	<target name="start-tomcat" depends="stop-tomcat, clean-cached-files">
+		<echo message="Starting Tomcat..." />
+		<java classname="org.apache.catalina.startup.Bootstrap" fork="true"
+			classpathref="tomcat.class.path">
+			<jvmarg value="-Dcatalina.home=${tomcat.home}" />
+		</java>
+	</target>
+
+	<!-- Copy files -->
+	<target name="copy-modified-files">
+		<echo message="Copying files..." />
+		<copy todir="${tomcat.home}/webapps/ROOT/WEB-INF/classes">
+			<fileset dir="${project.home}/target/classes">
+				<include name="**/*.*" />
+			</fileset>
+			<fileset dir="${project.home}/src/main/resources">
+				<include name="**/*.*" />
+			</fileset>
+		</copy>
+
+		<copy todir="${tomcat.home}/webapps/ROOT">
+			<fileset dir="${project.home}/src/main/webapp">
+				<include name="**/*.*" />
+			</fileset>
+		</copy>
+	</target>
+</project>
